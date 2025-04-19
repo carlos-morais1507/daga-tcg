@@ -1,103 +1,151 @@
-import Image from "next/image";
+
+"use client";
+
+import { useEffect, useState } from "react";
+import Papa from "papaparse";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [cartasNaoLocais, setCartasNaoLocais] = useState([]);
+  const [cartasLocais, setCartasLocais] = useState([]);
+  const [deck, setDeck] = useState([]);
+  const [abaAtiva, setAbaAtiva] = useState("nao-locais");
+  const [mostrarLista, setMostrarLista] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQPBNQ2wehYsoT6wbQzSCb-eyuoOR1U3-FvOLpVYaLoUCszlB9eSsnYqV699Sjh_4vTMQXk4KmRByAa/pub?output=csv", {
+      download: true,
+      header: true,
+      complete: (results) => setCartasNaoLocais(results.data),
+    });
+
+    Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSGvRSbB8O8hVmPs7kt2Y9fLPsHz8sfdT8BMzesP4nnhQ7H15lt2Ts5adx_yRWABevxQxrwha03RooX/pub?output=csv", {
+      download: true,
+      header: true,
+      complete: (results) => setCartasLocais(results.data),
+    });
+  }, []);
+
+  const adicionarCarta = (carta) => {
+    const nome = carta.NOME;
+    const existente = deck.find((c) => c.NOME === nome);
+    const totalCartas = deck.reduce((acc, c) => acc + c.quantidade, 0);
+
+    const ehLocal = (carta.TIPO || "").toLowerCase().includes("local");
+    const locaisNoDeck = deck.filter(c => (c.TIPO || "").toLowerCase().includes("local"))
+      .reduce((acc, c) => acc + c.quantidade, 0);
+
+    const limite = ehLocal ? 2 : ((carta.ATRIBUTO || "").toLowerCase().includes("personagem") ? 1 : 5);
+
+    if (totalCartas >= 50) return;
+    if (ehLocal && locaisNoDeck >= 10) return;
+
+    if (existente) {
+      if (existente.quantidade >= limite) return;
+      setDeck(deck.map(c => c.NOME === nome ? { ...c, quantidade: c.quantidade + 1 } : c));
+    } else {
+      setDeck([...deck, { ...carta, quantidade: 1 }]);
+    }
+  };
+
+  const removerCarta = (nome) => {
+    setDeck(deck
+      .map(c => c.NOME === nome ? { ...c, quantidade: c.quantidade - 1 } : c)
+      .filter(c => c.quantidade > 0)
+    );
+  };
+
+  const cartas = abaAtiva === "locais" ? cartasLocais : cartasNaoLocais;
+
+  return (
+    <div className="flex">
+      <div className="w-1/4 h-screen sticky top-0 p-4 border-r overflow-y-auto bg-gray-50">
+        <h2 className="text-xl font-bold mb-4">Seu Deck</h2>
+        {deck.length === 0 ? (
+          <p className="text-sm text-gray-500">Nenhuma carta adicionada ainda.</p>
+        ) : (
+          <>
+            <ul className="space-y-2 text-sm">
+              {deck.map((carta, i) => (
+                <li key={i} className="flex justify-between items-center border p-2 rounded bg-white">
+                  <div>
+                    <p>{carta.NOME} x{carta.quantidade}</p>
+                  </div>
+                  <div className="flex gap-1">
+                    <button onClick={() => removerCarta(carta.NOME)} className="px-2 bg-red-500 text-white rounded">−</button>
+                    <button onClick={() => adicionarCarta(carta)} className="px-2 bg-green-600 text-white rounded">+</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4 text-sm font-semibold text-gray-700">
+              Total: {deck.reduce((sum, c) => sum + c.quantidade, 0)} / 50 cartas
+            </div>
+            <button
+              onClick={() => setMostrarLista(true)}
+              className="mt-4 w-full py-2 px-4 bg-blue-600 text-white rounded"
+            >
+              ✅ Confirmar Deck
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className="w-3/4 p-4">
+        <div className="flex gap-4 mb-4">
+          <button onClick={() => setAbaAtiva("nao-locais")} className={"px-4 py-2 rounded " + (abaAtiva === "nao-locais" ? "bg-purple-600 text-white" : "bg-gray-200")}>
+            Não-Locais
+          </button>
+          <button onClick={() => setAbaAtiva("locais")} className={"px-4 py-2 rounded " + (abaAtiva === "locais" ? "bg-purple-600 text-white" : "bg-gray-200")}>
+            Locais
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {cartas.map((carta, index) => (
+            <li key={index} className="border rounded p-3 shadow text-sm flex flex-col justify-between">
+              <div>
+                <p className="font-semibold">{carta.NOME}</p>
+                {abaAtiva === "locais" ? (
+                  <>
+                    <p>💰 Ouro: {carta.OURO}</p>
+                    <p>👥 População: {carta.POPUL}</p>
+                    <p className="font-medium mt-1">{carta.NOME_HAB}</p>
+                    <p className="text-xs">{carta.HAB}</p>
+                  </>
+                ) : (
+                  <>
+                    <p>Tipo: {carta.TIPO}</p>
+                    <p>Custo: {carta.CUSTO}</p>
+                    <p>Facção: {carta.FACÇÃO}</p>
+                    <p>Atributo: {carta.ATRIBUTO}</p>
+                  </>
+                )}
+              </div>
+              <button onClick={() => adicionarCarta(carta)} className="mt-2 px-2 py-1 bg-purple-600 text-white text-xs rounded">
+                Adicionar
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {mostrarLista && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
+            <h2 className="text-lg font-bold mb-4">Lista do Deck</h2>
+            <ul className="text-left text-sm max-h-96 overflow-y-auto">
+              {deck.map((carta, i) => (
+                <li key={i}>- {carta.NOME} x{carta.quantidade}</li>
+              ))}
+            </ul>
+            <button
+              onClick={() => setMostrarLista(false)}
+              className="mt-6 w-full py-2 px-4 bg-red-600 text-white rounded"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
