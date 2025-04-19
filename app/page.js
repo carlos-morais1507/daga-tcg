@@ -108,8 +108,7 @@ export default function Home() {
                   <>
                     <p>💰 Ouro: {carta.OURO}</p>
                     <p>👥 População: {carta.POPUL}</p>
-                    <p className="font-medium mt-1">{carta.NOME_HAB}</p>
-                    <p className="text-xs">{carta.HAB}</p>
+                    <p className="text-xs mt-5">{carta.HABILIDADE}</p>
                   </>
                 ) : (
                   <>
@@ -117,6 +116,8 @@ export default function Home() {
                     <p>Custo: {carta.CUSTO}</p>
                     <p>Facção: {carta.FACÇÃO}</p>
                     <p>Atributo: {carta.ATRIBUTO}</p>
+                    <p className="font-bold mt-5">{carta.NOME_HAB1}</p>
+                    <p className="text-xs">{carta.HAB1}</p>
                   </>
                 )}
               </div>
