@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { addCard, removeCard } from "../lib/deck.cjs";
 import Papa from "papaparse";
 
 export default function Home() {
@@ -52,44 +53,11 @@ export default function Home() {
   }, []);
 
   const adicionarCarta = (carta) => {
-    setDeck((prev) => {
-      const nome = carta.NOME;
-      const existente = prev.find((c) => c.NOME === nome);
-      const totalCartas = prev.reduce((acc, c) => acc + c.quantidade, 0);
-
-      const ehLocal = (carta.TIPO || "").toLowerCase().includes("local");
-      const locaisNoDeck = prev
-        .filter((c) => (c.TIPO || "").toLowerCase().includes("local"))
-        .reduce((acc, c) => acc + c.quantidade, 0);
-
-      const limite = ehLocal
-        ? 2
-        : (carta.ATRIBUTO || "").toLowerCase().includes("personagem")
-        ? 1
-        : 5;
-
-      if (totalCartas >= 50) return prev;
-      if (ehLocal && locaisNoDeck >= 10) return prev;
-
-      if (existente) {
-        if (existente.quantidade >= limite) return prev;
-        return prev.map((c) =>
-          c.NOME === nome ? { ...c, quantidade: c.quantidade + 1 } : c,
-        );
-      }
-
-      return [...prev, { ...carta, quantidade: 1 }];
-    });
+    setDeck((prev) => addCard(prev, carta));
   };
 
   const removerCarta = (nome) => {
-    setDeck((prev) =>
-      prev
-        .map((c) =>
-          c.NOME === nome ? { ...c, quantidade: c.quantidade - 1 } : c,
-        )
-        .filter((c) => c.quantidade > 0),
-    );
+    setDeck((prev) => removeCard(prev, nome));
   };
 
   const cartas = abaAtiva === "locais" ? cartasLocais : cartasNaoLocais;
