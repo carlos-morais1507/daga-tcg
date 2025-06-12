@@ -1,5 +1,10 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+## Prerequisites
+
+- **Node.js**: version 18 or later is recommended for running the project.
+- **Environment variables**: any runtime configuration can be placed in an `.env.local` file (see [Next.js Environment Variables](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables)).
+
 ## Getting Started
 
 First, run the development server:
@@ -16,9 +21,20 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+To run the application in **production mode** use the following commands:
+
+```bash
+npm run build
+npm start
+```
+
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Data
+
+JSON files under `public/data/` contain deck information exported from Tabletop Simulator. They are used by the app to preload sample decks with local and non-local cards.
 
 ## Learn More
 
