@@ -12,17 +12,43 @@ export default function Home() {
   const [mostrarLista, setMostrarLista] = useState(false);
 
   useEffect(() => {
-    Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vQPBNQ2wehYsoT6wbQzSCb-eyuoOR1U3-FvOLpVYaLoUCszlB9eSsnYqV699Sjh_4vTMQXk4KmRByAa/pub?output=csv", {
-      download: true,
-      header: true,
-      complete: (results) => setCartasNaoLocais(results.data),
-    });
+    Papa.parse(
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPBNQ2wehYsoT6wbQzSCb-eyuoOR1U3-FvOLpVYaLoUCszlB9eSsnYqV699Sjh_4vTMQXk4KmRByAa/pub?output=csv",
+      {
+        download: true,
+        header: true,
+        complete: (results) => {
+          const unique = [];
+          const seen = new Set();
+          results.data.forEach((row) => {
+            if (!seen.has(row.NOME)) {
+              seen.add(row.NOME);
+              unique.push(row);
+            }
+          });
+          setCartasNaoLocais(unique);
+        },
+      },
+    );
 
-    Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vSGvRSbB8O8hVmPs7kt2Y9fLPsHz8sfdT8BMzesP4nnhQ7H15lt2Ts5adx_yRWABevxQxrwha03RooX/pub?output=csv", {
-      download: true,
-      header: true,
-      complete: (results) => setCartasLocais(results.data),
-    });
+    Papa.parse(
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGvRSbB8O8hVmPs7kt2Y9fLPsHz8sfdT8BMzesP4nnhQ7H15lt2Ts5adx_yRWABevxQxrwha03RooX/pub?output=csv",
+      {
+        download: true,
+        header: true,
+        complete: (results) => {
+          const unique = [];
+          const seen = new Set();
+          results.data.forEach((row) => {
+            if (!seen.has(row.NOME)) {
+              seen.add(row.NOME);
+              unique.push(row);
+            }
+          });
+          setCartasLocais(unique);
+        },
+      },
+    );
   }, []);
 
   const adicionarCarta = (carta) => {
@@ -78,7 +104,7 @@ export default function Home() {
           <>
             <ul className="space-y-2 text-sm">
               {deck.map((carta, i) => (
-                <li key={i} className="flex justify-between items-center border p-2 rounded bg-white">
+                <li key={carta.NOME} className="flex justify-between items-center border p-2 rounded bg-white">
                   <div>
                     <p>{carta.NOME} x{carta.quantidade}</p>
                   </div>
@@ -113,7 +139,7 @@ export default function Home() {
         </div>
         <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {cartas.map((carta, index) => (
-            <li key={index} className="border rounded p-3 shadow text-sm flex flex-col justify-between">
+            <li key={carta.NOME} className="border rounded p-3 shadow text-sm flex flex-col justify-between">
               <div>
                 <p className="font-semibold">{carta.NOME}</p>
                 {abaAtiva === "locais" ? (
@@ -147,7 +173,7 @@ export default function Home() {
             <h2 className="text-lg font-bold mb-4">Lista do Deck</h2>
             <ul className="text-left text-sm max-h-96 overflow-y-auto">
               {deck.map((carta, i) => (
-                <li key={i}>- {carta.NOME} x{carta.quantidade}</li>
+                <li key={carta.NOME}>- {carta.NOME} x{carta.quantidade}</li>
               ))}
             </ul>
             <button
